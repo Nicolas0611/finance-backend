@@ -19,26 +19,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  posts    Post[]
-  comments Comment[]
+  comments Comment[] 
 
   @@map("users")
-}
-
-model Post {
-  id        String   @id @default(uuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  comments Comment[]
-
-  @@map("posts")
 }
 
 model Comment {
@@ -48,13 +31,12 @@ model Comment {
   updatedAt DateTime @updatedAt
 
   postId   String
-  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("comments")
-}
+} 
 
 enum Role {
   USER

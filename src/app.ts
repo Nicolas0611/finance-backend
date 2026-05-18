@@ -3,7 +3,6 @@ import express from "express";
 import cors from "cors";
 
 import authRoutes from "./routes/authRoutes";
-import postRoutes from "./routes/postRoutes";
 import commentRoutes from "./routes/commentRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { AppError } from "./utils/AppError";
@@ -19,7 +18,6 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
 app.use("/api/posts/:postId/comments", commentRoutes); // nested: /api/posts/:postId/comments
 
 // ─── 404 ─────────────────────────────────────────────────────────────────────
