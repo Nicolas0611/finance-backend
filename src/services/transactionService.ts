@@ -1,7 +1,12 @@
-// src/services/commentService.ts
-
 import { transactionRepository } from "@/repositories/transactionRepository";
+import {
+  paginationQueryToParams,
+  type PaginationQuery,
+} from "@/validators/paginationValidators";
 
 export const transactionService = {
-  getAll: (userId: string) => transactionRepository.findAll(userId),
+  getAllPaginated: (userId: string, query: PaginationQuery) => {
+    const pagination = paginationQueryToParams(query);
+    return transactionRepository.findManyPaginated(userId, pagination);
+  },
 };

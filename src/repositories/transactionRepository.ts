@@ -1,15 +1,25 @@
-// src/repositories/commentRepository.ts
 import prisma from "@/config/database";
+import { paginate, type PaginationParams } from "@/utils/pagination";
 
 const categorySelect = { select: { id: true, name: true } } as const;
 
 export const transactionRepository = {
-  findAll: (userId: string) =>
-    prisma.transaction.findMany({
-      where: { userId },
-      orderBy: { createdAt: "asc" },
-      include: { category: categorySelect },
-    }),
+  findManyPaginated: (userId: string, pagination: PaginationParams) => {
+    const where = { userId };
+
+    return paginate({
+      pagination,
+      findMany: () =>
+        prisma.transaction.findMany({
+          where,
+          skip: pagination.skip,
+          take: pagination.take,
+          orderBy: { createdAt: "desc" },
+          include: { category: categorySelect },
+        }),
+      count: () => prisma.transaction.count({ where }),
+    });
+  },
 
   findById: (id: string) =>
     prisma.transaction.findUnique({

@@ -1,11 +1,16 @@
-// src/routes/commentRoutes.ts
 import { Router } from "express";
 import { authenticate } from "@/middlewares/auth";
+import { validateQuery } from "@/middlewares/validate";
 import { transactionController } from "@/controllers/transactionController";
+import { paginationQuerySchema } from "@/validators/paginationValidators";
 
-// mergeParams: true gives access to :postId from the parent route
 const router = Router({ mergeParams: true });
 
-router.get("/", authenticate, transactionController.getAll);
+router.get(
+  "/",
+  authenticate,
+  validateQuery(paginationQuerySchema),
+  transactionController.getAll,
+);
 
 export default router;

@@ -13,6 +13,7 @@ declare global {
         name: string
         role: Role
       }
+      validatedQuery?: unknown
     }
   }
 }
