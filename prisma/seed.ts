@@ -7,8 +7,9 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding database...");
 
+  await prisma.transaction.deleteMany();
+  await prisma.category.deleteMany();
   await prisma.comment.deleteMany();
-  await prisma.post.deleteMany();
   await prisma.user.deleteMany();
 
   const hashedPassword = await bcrypt.hash("password123", 10);
@@ -19,17 +20,28 @@ async function main() {
       name: "Admin User",
       password: hashedPassword,
       role: "ADMIN",
-      posts: {
+      categories: {
         create: [
           {
-            title: "Hello World",
-            content: "This is my first post!",
-            published: true,
+            id: "1",
+            name: "Food",
           },
           {
-            title: "Draft post",
-            content: "Work in progress...",
-            published: false,
+            id: "2",
+            name: "Transportation",
+          },
+          {
+            id: "3",
+            name: "Housing",
+          },
+        ],
+      },
+      transactions: {
+        create: [
+          {
+            amount: 100,
+            categoryId: "1",
+            description: "Salary",
           },
         ],
       },
