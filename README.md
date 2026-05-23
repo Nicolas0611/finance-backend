@@ -92,6 +92,101 @@ type CreatePostInput = z.infer<typeof createPostSchema> // free!
 
 ---
 
+## Request (`req`) and response (`res`)
+
+Every Express controller handler receives `(req, res, next)`. They represent the two sides of one HTTP round-trip.
+
+| | `req` | `res` |
+|---|---|---|
+| Direction | Client → server | Server → client |
+| Role | Read what the client sent | Write what the client receives |
+| Typical use | Headers, body, URL params, authenticated user | Status code, JSON body |
+
+### `req` — incoming request
+
+`req` holds everything the client sent:
+
+- **Headers** — e.g. `Authorization: Bearer <token>` via `req.headers.authorization`
+- **Body** — JSON on `POST`/`PUT` → `req.body`
+- **URL params** — e.g. `/posts/:id` → `req.params.id`
+- **Query string** — e.g. `?page=2` → `req.query.page`
+
+Example from a controller:
+
+```typescript
+const transactions = await transactionService.getAll(req.user!.id)
+```
+
+### `res` — outgoing response
+
+`res` is how you send data back. Use helpers in `src/utils/response.ts` so every endpoint returns the same shape:
+
+```typescript
+sendSuccess(res, { transactions })
+// → { success: true, data: { transactions } }
+```
+
+### Why is there a `user` on `req`?
+
+Express does **not** include `req.user` by default. This project adds it in two steps:
+
+1. **Auth middleware** — Protected routes run `authenticate` before the controller. It verifies the JWT, loads the user from the database, and attaches them to the request:
+
+```typescript
+// src/middlewares/auth.ts
+req.user = user
+next()
+```
+
+2. **TypeScript extension** — `src/types/express.d.ts` tells TypeScript that `req.user` exists and what shape it has:
+
+```typescript
+interface Request {
+  user?: {
+    id: string
+    email: string
+    name: string
+    role: Role
+  }
+}
+```
+
+In controllers behind `authenticate`, use `req.user!.id` (the `!` asserts it is defined — safe only because the middleware ran first).
+
+### Request flow for a protected endpoint
+
+Example: `GET /api/transactions` with a Bearer token.
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant authenticate
+  participant Controller
+  participant DB
+
+  Client->>authenticate: GET / + Authorization header
+  authenticate->>DB: find user by JWT userId
+  authenticate->>Controller: req.user = user, next()
+  Controller->>DB: service.getAll(req.user.id)
+  Controller->>Client: sendSuccess(res, { transactions })
+```
+
+Route wiring (middleware runs left to right):
+
+```typescript
+// src/routes/transactionRoutes.ts
+router.get('/', authenticate, transactionController.getAll)
+```
+
+1. Client sends the request with a JWT in the `Authorization` header.
+2. `authenticate` validates the token and sets `req.user`.
+3. The controller reads `req.user.id` to scope data to the logged-in user.
+4. The controller sends the result with `res` via `sendSuccess`.
+
+**Convention:** Middleware enriches `req`; the controller reads from `req` and writes to `res`; services never touch `req` or `res` (they receive plain values like `userId` instead).
+
+---
+
 ## API endpoints
 
 ### Auth
